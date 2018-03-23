@@ -1,0 +1,26 @@
+{
+  "name": "vdom",
+  "version": "0.0.1",
+  "description": "Virtual DOM",
+  "main": "index.js",
+  "scripts": {
+    "test": "open test.html",
+    "watch": "webpack --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fefranzoni/vdom.git"
+  },
+  "author": "Fernando Rama",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fefranzoni/vdom/issues"
+  },
+  "homepage": "https://github.com/fefranzoni/vdom#readme",
+  "devDependencies": {
+    "express": "^4.16.3",
+    "node-watch": "^0.5.8",
+    "socket.io": "^2.0.4"
+  },
+  "dependencies": {}
+}
