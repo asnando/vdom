@@ -2,7 +2,7 @@
   "name": "vdom",
   "version": "0.0.1",
   "description": "Virtual DOM",
-  "main": "index.js",
+  "main": "dist/vdom.js",
   "scripts": {
     "test": "open test.html",
     "watch": "webpack --watch",
