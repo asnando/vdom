@@ -4,7 +4,7 @@
 
 ## Motivation
 
-The need to update only the actual changes between two states of an element within the real DOM. Something like reactive frameworks, such as React.js.
+The need to update only the actual changes between two states of an element within the real DOM. Something like reactive libraries, such as React.js.
 
 Some libraries offer the same or similar service, but do not always have a small file size to distribute your code. With this in mind, a small code <b>(4KB)</b> has been developed capable of performing the necessary work.
 
