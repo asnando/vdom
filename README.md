@@ -15,7 +15,7 @@ Receives an virtual tree and returns the real DOM Element for that tree.
 
 ##### Example
 ```javascript
-var tree = vdom.h(...);
+var tree = vdom.vtree(...);
 var el = vdom.create(tree);
 document.body.appendChild(el);
 ```
@@ -38,7 +38,7 @@ Creates Virtual DOM Tree.
 
 ##### Example
 ```javascript
-var tree = vdom.h('ul', null, [
+var tree = vdom.vtree('ul', null, [
   vdom.h('li', { data: 'B' }, [ vdom.h('B') ])
 ]);
 
@@ -124,4 +124,13 @@ var tree = vdom.parse2Tree(html);
 #### h(type, props, children)
 Use hyperscript style to create Virtual DOM Trees.
 
-Calls the "vtree" method.
+Interface to "vtree" method.
+
+##### Example
+```javascript
+var tree = vdom.h('ul', null, [
+  vdom.h('li', { data: 'B' }, [ vdom.h('B') ])
+]);
+
+console.log(tree);
+```
