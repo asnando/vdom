@@ -6,7 +6,8 @@
   "scripts": {
     "test": "open test.html",
     "watch": "webpack --watch",
-    "server": "node server.js"
+    "server": "node server.js",
+    "dist": "webpack -p"
   },
   "repository": {
     "type": "git",

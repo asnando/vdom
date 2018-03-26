@@ -20,14 +20,35 @@
     location.reload();
   });
 
-  document.addEventListener('DOMContentLoaded', function() {
-    test();
-  });
+  // ****
+  // ****
+  // ****
 
-  function test() {
-    // console.warn('#');
-    // console.log(vdom);
+  var users = [];
+
+  for (var counter=0; counter<5; counter++) {
+    users.push({ name: "User" + counter, data: [1, counter], prop: counter });
   }
+
+  function x(users, a) {
+    return h('ul', null, users.map(function(user, index) {
+      return h('li', { index: user.prop, style: user.style || '' }, [
+        h(user.name),
+        h('ul', null, user.data.map(function(l) {
+          return h('li', null, [
+            h(l)
+          ])
+        }))
+      ])
+    }))
+  }
+
+  var h = vdom.h;
+  var render = vdom.render;
+
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log(vdom);
+  });
 
 </script>
 

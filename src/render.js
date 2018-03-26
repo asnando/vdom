@@ -1,32 +1,59 @@
 var create = require('./create-element');
-var handler = require('./vhandler');
 
+/**
+ * 
+ * @param {HTMLElement} root 
+ * The mounting point for the render function.
+ * 
+ * @param {VTree} a 
+ * The new Virtual DOM Tree representation.
+ * 
+ * @param {VTree} b 
+ * The old Virtual DOM Tree representation.
+ * 
+ * @param {Integer} index 
+ * Index used for traversing root children elements.
+ * 
+ */
 module.exports = function render(root, a, b, index = 0) {
 
+  // The mount point can't be the body of the html, cuz
+  // the body contains multiple elementary elements that stop
+  // the this function to work.
   if (document && document.body && (root === document.body)) {
     throw new Error('Root element for render can\'t be the body element.');
   }
 
+  // Checks if root element is HTML Element.
   if (!root || !(root instanceof HTMLElement)) {
     throw new Error('Root element must be used as html element.');
   }
 
+  // Check if the new and one Nodes are of VTREE type, otherwise causes error.
   if ((a && !a.VTREE) || (b && !b.VTREE)) {
     throw new Error('Render function only works with virtual dom nodes.');
   }
 
+  // Generally when node "b" is empty, means that we are rendering
+  // the element for the first time, and in this case we simply
+  // append the elements created by the tree.
+  
+  // Otherwise, means that we need to analyse the changes from the old
+  // and the new state of the tree.
+
   if (!b) {
-    // If no old node, then just append the new node to the root element.
     root.appendChild(create(a));
   } else if (!a) {
-    // Empty new node.
+    // Means that the element rendered before no longer exists.
     root.removeChild(root.childNodes[index]);
   } else if (compareNodes(a, b)) {
-    // Compare node differences type differences.
+    // If any change is detected between the node types, replace the last
+    // node element with a new one.
     root.replaceChild(create(a), root.childNodes[index]);
   } else {
+    // Otherwise, we walk throught the actual element children's and
+    // check for new tree changes.
 
-    // Compare each child of the root element, if exists.
     if (!a.children) return;
 
     if (includes(a.children, undefined) || includes(b.children, undefined)) {
@@ -39,7 +66,6 @@ module.exports = function render(root, a, b, index = 0) {
     // When old children length is greater than the new one, 
     // means that some children were removed. In this case we iterate the
     // index from the last length of the difference to the beginning.
-    // # Resolves a bug.
     if (lenb > lena) {
       for (var i = lenb - 1; i >= lena; i--) {
         render(root.childNodes[index], a.children[i], b.children[i], i);
@@ -47,17 +73,19 @@ module.exports = function render(root, a, b, index = 0) {
       lenb = lena;
     }
 
-    // Otherwise in normal cases we just iterate from 0 to the index.
+    // When normal cases we just iterate from 0 to the length index.
     for (var i = 0; i < lena || i < lenb; i++) {
       render(root.childNodes[index], a.children[i], b.children[i], i);
     }
   }
 
+  // If the two node trees exists, check for props (e.g attributes)
+  // changes, and updates it inside the real DOM element.
+  // This process occurs outside the above statements cuz it dont't change
+  // the tree of the elements.
   if (a && b && compareProps(a, b)) {
-    // Props changed.
     applyProps(root.childNodes[index], a.props, b.props);
   }
-
 };
 
 function compareNodes(a, b) {
@@ -67,14 +95,15 @@ function compareNodes(a, b) {
 }
 
 function compareProps(a, b) {
-  // Do not compare text nodes.
-  if (a.VTEXT) return false;
+  // Props (attributes) only exists in normal Node elements,
+  // not in Text Nodes.
+  if (a.VTEXT) {
+    return false;
+  }
   return !equals(a.props, b.props);
 }
 
 function applyProps(el, a, b) {
-  // a = new
-  // b = old
   var props = b ? objectDiff(b, a) : a;
   Object.keys(props).forEach(function(prop) {
     el.setAttribute(prop, props[prop]);
@@ -82,7 +111,6 @@ function applyProps(el, a, b) {
 }
 
 
-// ********
 function objectDiff(a, b) {
   var diff = {};
   Object.keys(b).forEach(function(key) {

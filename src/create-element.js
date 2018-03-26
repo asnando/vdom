@@ -1,23 +1,23 @@
-module.exports = function createElement(tree) {
+module.exports = function createElement(vtree) {
 
-  if (!(tree instanceof Object) || !tree.VTREE) {
-    throw new Error('Argument must be virtual dom tree.');
+  if (!(vtree instanceof Object) || !vtree.VTREE) {
+    throw new Error('Argument must be virtual dom vtree.');
   }
 
-  if (tree.VTEXT) {
-    return document.createTextNode(tree.text);
+  if (vtree.VTEXT) {
+    return document.createTextNode(vtree.text);
   }
 
-  var el = document.createElement(tree.type);
+  var el = document.createElement(vtree.type);
 
-  if (tree.props && (tree.props instanceof Object)) {
-    Object.keys(tree.props).forEach(function(prop) {
-      el.setAttribute(prop, tree.props[prop]);
+  if (vtree.props && (vtree.props instanceof Object)) {
+    Object.keys(vtree.props).forEach(function(prop) {
+      el.setAttribute(prop, vtree.props[prop]);
     });
   }
 
-  if (tree.children && Array.isArray(tree.children)) {
-    tree.children.map(createElement).forEach(el.appendChild.bind(el));
+  if (vtree.children && Array.isArray(vtree.children)) {
+    vtree.children.map(createElement).forEach(el.appendChild.bind(el));
   }
 
   return el;
