@@ -10,33 +10,32 @@ Some libraries offer the same or similar service, but do not always have a small
 
 ## Public API
 
-#### create(vtree)
+### `create(vtree)`
 Receives an virtual tree and returns the real DOM Element for that tree.
 
-##### Example
 ```javascript
 var tree = vdom.vtree(...);
 var el = vdom.create(tree);
 document.body.appendChild(el);
 ```
 
-#### vtree(type, props, children)
+### `vtree(type, props, children)`
 Creates Virtual DOM Tree.
 
-```javascript
-@param {String} type
-// If "text" is used, then will create an "Virtual Text Node" instead of normal Node.
-// If only this argument is passed to the function and it type is equals to string, then
-// it will automatically return an Virtual Text Node with this value as text.
+`type`
 
-@param {Object} props
-// A list of properties that will be seted inside the element attributes.
+If "text" is used, then will create an "Virtual Text Node" instead of normal Node.
 
-@param {Array} children
-// Array of elements that will be nested inside the element.
-```
+If only this argument is passed to the function and it type is equals to string, then it will automatically return an Virtual Text Node with this value as text.
 
-##### Example
+`props`
+
+A list of properties that will be seted inside the element attributes.
+
+`children`
+
+Array of elements that will be nested inside the element.
+
 ```javascript
 var tree = vdom.vtree('ul', null, [
   vdom.h('li', { data: 'B' }, [ vdom.h('B') ])
@@ -46,21 +45,20 @@ console.log(tree);
 ```
 
 
-#### vnode(type, props, children)
+### `vnode(type, props, children)`
 Returns the Virtual Node for the given parameters.
 
-```javascript
-@param {String} type
+`type`
+
 The type of tagname of the element.
 
-@param {Object} props
+`props`
+
 Object of attributes/propreties that will be set as the element attributes.
 
-@param {Array} children
-Array of sub-elements that will be contained inside the element.
-```
+`children`
 
-##### Example
+Array of sub-elements that will be contained inside the element.
 
 ```javascript
 var vnode = vdom.vnode('div', { someData: 1 }, [
@@ -68,28 +66,21 @@ var vnode = vdom.vnode('div', { someData: 1 }, [
 ]);
 ```
 
-#### vtext(text)
+### `vtext(text)`
 Returns the Virtual Text Node for the given text.
 
-##### Example
 ```javascript
 var text = vdom.vtext('Some text here.');
 ```
 
-#### render(root, newTree, oldTree)
+### `render(root, newTree, oldTree)`
 Renders the created html for the given virtual tree(s).
 
 This function must receive an rendered element in the real DOM, where it will be mounted after the trees mount.
 
 When two trees are passed as argument, the function will calculate the differences between the two trees and <b>will only re-render the differences in the Real DOM.</b>
 
----
-
-<b>The root element for the render function must be an different element from the body element of the page.</b>
-
----
-
-##### Example
+##### ⚠️  The root element for the render function must be an different element from the body element of the page.
 
 ```javascript
 var root = document.querySelector('#root');
@@ -107,10 +98,8 @@ var treeB = vdom.h('ul', null, [
 vdom.render(root, treeB, treeA);
 ```
 
-#### parse2Tree(html)
+### `parse2Tree(html)`
 Parses an html element or html string representation to a new Virtual DOM Tree.
-
-##### Example
 
 ```javascript
 var html = document.querySelector('.container') || '<ul>\
@@ -121,12 +110,11 @@ var html = document.querySelector('.container') || '<ul>\
 var tree = vdom.parse2Tree(html);
 ```
 
-#### h(type, props, children)
+### `h(type, props, children)`
 Use hyperscript style to create Virtual DOM Trees.
 
 Interface to "vtree" method.
 
-##### Example
 ```javascript
 var tree = vdom.h('ul', null, [
   vdom.h('li', { data: 'B' }, [ vdom.h('B') ])
