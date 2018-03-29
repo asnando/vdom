@@ -15,7 +15,10 @@ var create = require('./create-element');
  * Index used for traversing root children elements.
  * 
  */
-module.exports = function render(root, a, b, index = 0) {
+module.exports = function render(root, a, b, index = 0, delegator = null) {
+
+  index = !isNaN(index) ? index : 0;
+  delegator = delegator ? deletator : (arguments[4] && (arguments[4] instanceof Object)) ? arguments[4] : null;
 
   // The mount point can't be the body of the html, cuz
   // the body contains multiple elementary elements that stop
@@ -31,7 +34,21 @@ module.exports = function render(root, a, b, index = 0) {
 
   // Check if the new and one Nodes are of VTREE type, otherwise causes error.
   if ((a && !a.VTREE) || (b && !b.VTREE)) {
-    throw new Error('Render function only works with virtual dom nodes.');
+    throw new Error('Render function only works with virtual dom trees.');
+  }
+
+  function addListener(e) {
+    if (delegator && delegator.add && delegator.add instanceof Function) {
+      delegator.add(e);
+    }
+    return e;
+  }
+
+  function removeListener(e) {
+    if (delegator && delegator.remove && delegator.remove instanceof Function) {
+      delegator.remove(e);
+    }
+    return e;
   }
 
   // Generally when node "b" is empty, means that we are rendering
@@ -42,14 +59,14 @@ module.exports = function render(root, a, b, index = 0) {
   // and the new state of the tree.
 
   if (!b) {
-    root.appendChild(create(a));
+    root.appendChild(addListener(create(a)));
   } else if (!a) {
     // Means that the element rendered before no longer exists.
     root.removeChild(root.childNodes[index]);
   } else if (compareNodes(a, b)) {
     // If any change is detected between the node types, replace the last
     // node element with a new one.
-    root.replaceChild(create(a), root.childNodes[index]);
+    root.replaceChild(addListener(create(a)), removeListener(root.childNodes[index]));
   } else {
     // Otherwise, we walk throught the actual element children's and
     // check for new tree changes.
@@ -68,14 +85,14 @@ module.exports = function render(root, a, b, index = 0) {
     // index from the last length of the difference to the beginning.
     if (lenb > lena) {
       for (var i = lenb - 1; i >= lena; i--) {
-        render(root.childNodes[index], a.children[i], b.children[i], i);
+        render(root.childNodes[index], a.children[i], b.children[i], i, delegator);
       }
       lenb = lena;
     }
 
     // When normal cases we just iterate from 0 to the length index.
     for (var i = 0; i < lena || i < lenb; i++) {
-      render(root.childNodes[index], a.children[i], b.children[i], i);
+      render(root.childNodes[index], a.children[i], b.children[i], i, delegator);
     }
   }
 
@@ -85,6 +102,7 @@ module.exports = function render(root, a, b, index = 0) {
   // the tree of the elements.
   if (a && b && compareProps(a, b)) {
     applyProps(root.childNodes[index], a.props, b.props);
+    addListener(root.childNodes[index]);
   }
 };
 
