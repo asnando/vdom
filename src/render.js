@@ -18,7 +18,7 @@ var create = require('./create-element');
 module.exports = function render(root, a, b, index = 0, delegator = null) {
 
   index = !isNaN(index) ? index : 0;
-  delegator = delegator ? deletator : (arguments[4] && (arguments[4] instanceof Object)) ? arguments[4] : null;
+  delegator = delegator ? delegator : (arguments[3] && (arguments[3] instanceof Object)) ? arguments[3] : null;
 
   // The mount point can't be the body of the html, cuz
   // the body contains multiple elementary elements that stop
