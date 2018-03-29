@@ -62,7 +62,7 @@ module.exports = function render(root, a, b, index = 0, delegator = null) {
     root.appendChild(addListener(create(a)));
   } else if (!a) {
     // Means that the element rendered before no longer exists.
-    root.removeChild(root.childNodes[index]);
+    root.removeChild(removeListener(root.childNodes[index]));
   } else if (compareNodes(a, b)) {
     // If any change is detected between the node types, replace the last
     // node element with a new one.
