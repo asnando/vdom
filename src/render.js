@@ -67,7 +67,7 @@ module.exports = function render(root, a, b, index = 0, delegator = null) {
     // If any change is detected between the node types, replace the last
     // node element with a new one.
     root.replaceChild(addListener(create(a)), removeListener(root.childNodes[index]));
-  } else {
+  } else if (compareChildren(a, b)) {
     // Otherwise, we walk throught the actual element children's and
     // check for new tree changes.
 
@@ -112,13 +112,23 @@ function compareNodes(a, b) {
     || a.type !== b.type;
 }
 
+function compareChildren(a, b) {
+
+  if (!a.children && !b.children) {
+    return false;
+  }
+
+  if (a.children.length !== b.children.length) {
+    return true;
+  }
+
+  return arrayDiff(a.children, b.children);
+}
+
 function compareProps(a, b) {
   // Props (attributes) only exists in normal Node elements,
   // not in Text Nodes.
-  if (a.VTEXT) {
-    return false;
-  }
-  return !equals(a.props, b.props);
+  return a.VTEXT ? false : !equals(a.props, b.props);
 }
 
 function applyProps(el, a, b) {
@@ -151,5 +161,26 @@ function includes(a, v) {
   for (var index = 0; index < a.length; index++) {
     if (a[index] === v) return true;
   }
+  return false;
+}
+
+function isObject(o) {
+  return o instanceof Object;
+}
+
+function arrayDiff(a,b) {
+
+  if (a.length !== b.length) {
+    return true;
+  }
+
+  for (var counter=0; counter<a.length; a++) {
+    if (isObject(a[counter]) && !equals(a[counter], b[counter])) {
+      return true;
+    } else if (a[counter] !== b[counter]) {
+      return true;
+    }
+  }
+
   return false;
 }
