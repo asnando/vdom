@@ -1,4 +1,5 @@
 var create = require('./create-element');
+var h = require('./h');
 
 /**
  * 
@@ -15,9 +16,10 @@ var create = require('./create-element');
  * Index used for traversing root children elements.
  * 
  */
-module.exports = function render(root, a, b, index = 0, delegator = null) {
+module.exports = function render(root, a, b, index, delegator) {
 
   index = !isNaN(index) ? index : 0;
+
   delegator = delegator ? delegator : (arguments[3] && (arguments[3] instanceof Object)) ? arguments[3] : null;
 
   // The mount point can't be the body of the html, cuz
@@ -27,13 +29,18 @@ module.exports = function render(root, a, b, index = 0, delegator = null) {
     throw new Error('Root element for render can\'t be the body element.');
   }
 
-  // Checks if root element is HTML Element.
+  // // Checks if root element is HTML Element.
   if (!root || !(root instanceof HTMLElement)) {
-    throw new Error('Root element must be used as html element.');
+    throw new Error('Root element must be an html element.');
   }
 
+  // This function can receive an array of trees instead of a full tree for the
+  // objects a and b. In this case, it will iterate throught the array like
+  // the loop of the children of virtual node.
+  var isArrayTree = a && isArray(a) && a[0].VTREE || b && isArray(b) && b[0].VTREE;
+
   // Check if the new and one Nodes are of VTREE type, otherwise causes error.
-  if ((a && !a.VTREE) || (b && !b.VTREE)) {
+  if (!isArrayTree && ((a && !a.VTREE) || (b && !b.VTREE))) {
     throw new Error('Render function only works with virtual dom trees.');
   }
 
@@ -58,16 +65,38 @@ module.exports = function render(root, a, b, index = 0, delegator = null) {
   // Otherwise, means that we need to analyse the changes from the old
   // and the new state of the tree.
 
-  if (!b) {
+  if (!b && !isArrayTree) {
+
     root.appendChild(addListener(create(a)));
-  } else if (!a) {
+
+  } else if (!a && !isArrayTree) {
+    
     // Means that the element rendered before no longer exists.
     root.removeChild(removeListener(root.childNodes[index]));
-  } else if (compareNodes(a, b)) {
+
+  } else if (a && b && compareNodes(a, b)) {
+
     // If any change is detected between the node types, replace the last
     // node element with a new one.
     root.replaceChild(addListener(create(a)), removeListener(root.childNodes[index]));
+
+  } else if (isArrayTree) {
+
+    var lena = a ? a.length : 0;
+    var lenb = b ? b.length : 0;
+
+    if (lenb > lena) {
+      for (var i = lenb - 1; i >= lena; i--) {
+        render(root, a[i], b[i], i, delegator);
+      }
+    }
+
+    for (var i = 0; i < lena; i++) {
+      render(root, a[i], b ? b[i] : null, i, delegator);
+    }
+
   } else if (compareChildren(a, b)) {
+
     // Otherwise, we walk throught the actual element children's and
     // check for new tree changes.
 
@@ -104,6 +133,7 @@ module.exports = function render(root, a, b, index = 0, delegator = null) {
     applyProps(root.childNodes[index], a.props, b.props);
     addListener(root.childNodes[index]);
   }
+
 };
 
 function compareNodes(a, b) {
@@ -114,20 +144,23 @@ function compareNodes(a, b) {
 
 function compareChildren(a, b) {
 
-  if (!a.children && !b.children) {
+  var ca = a ? a.children : null;
+  var cb = b ? b.children : null;
+
+  if (!ca && !cb) {
     return false;
-  }
-
-  if (a.children.length !== b.children.length) {
+  } else if ((ca && !cb) || (cb && !ca)) {
     return true;
+  } else if (ca.length !== cb.length) {
+    return true;
+  } else {
+    return arrayDiff(a.children, b.children);
   }
-
-  return arrayDiff(a.children, b.children);
+  
 }
 
 function compareProps(a, b) {
-  // Props (attributes) only exists in normal Node elements,
-  // not in Text Nodes.
+  // Props (attributes) only exists in normal Node elements, not in Text Nodes.
   return a.VTEXT ? false : !equals(a.props, b.props);
 }
 
@@ -166,6 +199,10 @@ function includes(a, v) {
 
 function isObject(o) {
   return o instanceof Object;
+}
+
+function isArray(a) {
+  return Array.isArray(a);
 }
 
 function arrayDiff(a,b) {
