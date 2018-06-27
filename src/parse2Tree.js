@@ -1,32 +1,31 @@
 var h = require('./h');
+var _ = require('./utils/index');
 
 module.exports = function parse2Tree(e) {
 
-  if (type(e) === 'text') {
+  if (/text/.test(_.type(e))) {
     return h('text', e.nodeValue);
   }
 
-  if (typeof e === 'string') {
+  if (_.type(e) === 'string') {
     e = e.replace(/\s{2,}/g, '');
-    e = parse2HTML(e);
+    e = _.toHTML(e);
   }
 
-  var props = {};
-  [].slice.call(e.attributes).forEach(function(attr) {
-    props[attr.name] = attr.value;
-  });
-
-  var children = [].slice.call(e.childNodes).map(parse2Tree);
+  var props    = elementAttrs(e);
+  var children = _.from(e.childNodes).map(parse2Tree);
 
   return h(e.tagName, props, children);
 }
 
-function parse2HTML(h) {
-  var w = document.createElement('div');
-  w.innerHTML = h;
-  return w.childNodes[0];
-}
+function elementAttrs(el) {
 
-function type(a) {
-  return Object.prototype.toString.call(a).replace(/^\[object (.+)\]$/, '$1').toLowerCase();
+  var attrs = {};
+  
+  _.from(el.attributes).forEach(function(attr) {
+    attrs[attr.name] = attr.value;
+  });
+
+  return attrs;
+
 }

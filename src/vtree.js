@@ -1,32 +1,47 @@
 var vnode = require('./vnode');
 var vtext = require('./vtext');
+var _ = require('./utils/index');
 
 module.exports = function vtree(type, props, children) {
 
-  var alen = arguments.length;
+  console.warn(type, props, children);
 
-  // When someone tries to create an Virtual Text Node using this function
-  // only passing the text value as parameter and the type of the text
-  // is different from String, then try to parse it to String.
-  if ((typeof type !== 'string' || type instanceof Object) && type.toString) {
-    type = type.toString();
+  if (arguments.length < 1) {
+    throw new Error('Undefined tag name or text content.');
   }
 
-  var rtp = ((alen === 1 && typeof type === 'string') || (type === 'text')) ? 'VTEXT' : 'VNODE';
+  if ((!_.isDef(type)) || _.type(type) !== 'string') {
+    throw new Error('Type must be an real html tag name or an text value.');
+  }
 
-  switch (rtp) {
-    case 'VTEXT':
-      return xtend(vtext(props || type), { VTREE: 1 });
-    case 'VNODE':
-      return xtend(vnode(type, props, children), { VTREE: 1 });
+  if (_.isDef(props) && _.type(props) !== 'object') {
+    throw new Error('Props must be an object representation.');
+  }
+
+  if (_.isDef(children) && _.type(children) !== 'array') {
+    throw new Error('Children must be an array representation.');
+  }
+
+  if (_.isDef(children)) {
+    children = children.map(function (child) {
+      return vtree(child);
+    });
+  }
+
+  var nodeType = (arguments.length === 1 && typeof type === 'string') ? 'vtext' : 'vnode';
+
+  switch (nodeType) {
+
+    case 'vtext':
+      return _.xtend(vtext(type), {
+        VTREE: 1
+      });
+
+    case 'vnode':
+      return _.xtend(vnode(type, props, children), {
+        VTREE: 1
+      });
+
   };
-}
-
-function xtend(a,b) {
-  for (var key in b) {
-    if (b.hasOwnProperty(key)) {
-      a[key] = b[key];
-    }
-  }
-  return a;
+  
 }
