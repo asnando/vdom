@@ -7,5 +7,6 @@ module.exports = {
     filename: "vdom.js",
     library: 'vdom'
   },
-  mode: "development"
+  mode: "production",
+  devtool: "source-map"
 }

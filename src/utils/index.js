@@ -1,4 +1,5 @@
 module.exports = {
+  keys:       req('keys'),
   from:       req('from'),
   toHTML:     req('toHTML'),
   type:       req('type'),

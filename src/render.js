@@ -1,26 +1,28 @@
 var _ = require('./utils/index');
+var createElement = require('./create-element');
 
 /**
  * 
  * @param {HTMLElement} root 
  * The element where the tree will be mounted.
  * 
- * @param {VTree} a 
+ * @param {VTree} nTree 
  * The new Virtual DOM Tree representation.
  * 
- * @param {VTree} b 
+ * @param {VTree} oTree 
  * The old Virtual DOM Tree representation (optional).
+ * 
+ * @param {Object} delegator
+ * Object containing the add and remove methods which manages
+ * the event listeners for the created elements.
  * 
  * @param {Integer} index 
  * Index used for traversing root children elements.
  * 
  */
-module.exports = function render(root, a, b, index, delegator) {
+module.exports = function render(root, nTree, oTree, delegator, index) {
 
-  // index = !isNaN(index) ? index : 0;
-  index = _.isNumber(index) ? index : 0;
-
-  delegator = delegator ? delegator : (arguments[3] && _.type(arguments[3]) === 'object') ? arguments[3] : null;
+  index = !_.isDef(index) ? 0 : index;
 
   // The mount point can't be the body of the html, cuz
   // the body contains multiple elementary elements that stop
@@ -37,11 +39,11 @@ module.exports = function render(root, a, b, index, delegator) {
   // This function can receive an array of trees instead of a full tree for the
   // objects a and b. In this case, it will iterate throught the array like
   // the loop of the children of virtual node.
-  var isArrayTree = (_.isDef(a) && _.type(a) === 'array' && a[0].VTREE)
-    || (_.isDef(b) && _.type(b) === 'array' && b[0].VTREE);
+  var isArrayTree = (_.isDef(nTree) && _.type(nTree) === 'array' && nTree[0].VTREE)
+    || (_.isDef(oTree) && _.type(oTree) === 'array' && oTree[0].VTREE);
 
   // Check if the new and one Nodes are of VTREE type, otherwise causes error.
-  if (!isArrayTree && ((_.isDef(a) && !a.VTREE) || (_.isDef(b) && !b.VTREE))) {
+  if (!isArrayTree && ((_.isDef(nTree) && !nTree.VTREE) || (_.isDef(oTree) && !oTree.VTREE))) {
     throw new Error('Render function only works with virtual dom trees.');
   }
 
@@ -66,63 +68,63 @@ module.exports = function render(root, a, b, index, delegator) {
   // Otherwise, means that we need to analyse the changes from the old
   // and the new state of the tree.
 
-  if (!b && !isArrayTree) {
+  if (!oTree && !isArrayTree) {
 
-    root.appendChild(addListener(createElement(a)));
+    root.appendChild(addListener(createElement(nTree)));
 
-  } else if (!a && !isArrayTree) {
+  } else if (!nTree && !isArrayTree) {
     
     // Means that the element rendered before no longer exists.
     root.removeChild(removeListener(root.childNodes[index]));
 
-  } else if (a && b && compareNodes(a, b)) {
+  } else if (nTree && oTree && compareNodes(nTree, oTree)) {
 
     // If any change is detected between the node types, replace the last
     // node element with a new one.
-    root.replaceChild(addListener(createElement(a)), removeListener(root.childNodes[index]));
+    root.replaceChild(addListener(createElement(nTree)), removeListener(root.childNodes[index]));
 
   } else if (isArrayTree) {
 
-    var lena = a ? a.length : 0;
-    var lenb = b ? b.length : 0;
+    var lena = nTree ? nTree.length : 0;
+    var lenb = oTree ? oTree.length : 0;
 
     if (lenb > lena) {
       for (var i = lenb - 1; i >= lena; i--) {
-        render(root, a[i], b[i], i, delegator);
+        render(root, nTree[i], oTree[i], delegator, i);
       }
     }
 
     for (var i = 0; i < lena; i++) {
-      render(root, a[i], b ? b[i] : null, i, delegator);
+      render(root, nTree[i], oTree ? oTree[i] : null, delegator, i);
     }
 
-  } else if (compareChildren(a, b)) {
+  } else if (compareChildren(nTree, oTree)) {
 
     // Otherwise, we walk throught the actual element children's and
     // check for new tree changes.
 
-    if (!a.children) return;
+    if (!nTree.children) return;
 
-    if (_.includes(a.children, undefined) || _.includes(b.children, undefined)) {
+    if (_.includes(nTree.children, undefined) || _.includes(oTree.children, undefined)) {
       throw new Error('Children array with empty nodes inside it will not be rendered, please check your node tree.');
     }
 
-    var lena = a.children.length;
-    var lenb = b.children.length;
+    var lena = nTree.children.length;
+    var lenb = oTree.children.length;
 
     // When old children length is greater than the new one, 
     // means that some children were removed. In this case we iterate the
     // index from the last length of the difference to the beginning.
     if (lenb > lena) {
       for (var i = lenb - 1; i >= lena; i--) {
-        render(root.childNodes[index], a.children[i], b.children[i], i, delegator);
+        render(root.childNodes[index], nTree.children[i], oTree.children[i], delegator, i);
       }
       lenb = lena;
     }
 
     // When normal cases we just iterate from 0 to the length index.
     for (var i = 0; i < lena || i < lenb; i++) {
-      render(root.childNodes[index], a.children[i], b.children[i], i, delegator);
+      render(root.childNodes[index], nTree.children[i], oTree.children[i], delegator, i);
     }
   }
 
@@ -130,8 +132,8 @@ module.exports = function render(root, a, b, index, delegator) {
   // changes, and updates it inside the real DOM element.
   // This process occurs outside the above statements cuz it dont't change
   // the tree of the elements.
-  if (a && b && compareProps(a, b)) {
-    applyProps(root.childNodes[index], a.props, b.props);
+  if (nTree && oTree && compareProps(nTree, oTree)) {
+    applyProps(root.childNodes[index], nTree.props, oTree.props);
     addListener(root.childNodes[index]);
   }
 
@@ -167,32 +169,7 @@ function compareProps(a, b) {
 
 function applyProps(el, a, b) {
   var props = b ? _.objectDiff(b, a) : a;
-  Object.keys(props).forEach(function(prop) {
+  _.keys(props).forEach(function(prop) {
     el.setAttribute(prop, props[prop]);
   });
 }
-
-function createElement(vtree) {
-
-  if (_.type(vtree) !== 'object' || !vtree.VTREE) {
-    throw new Error('Argument must be virtual dom vtree.');
-  }
-
-  if (vtree.VTEXT) {
-    return document.createTextNode(vtree.text);
-  }
-
-  var el = document.createElement(vtree.type);
-
-  if (_.isDef(vtree.props) && _.type(vtree.props) === 'object') {
-    Object.keys(vtree.props).forEach(function(prop) {
-      el.setAttribute(prop, vtree.props[prop]);
-    });
-  }
-
-  if (_.isDef(vtree.children) && _.type(vtree.children) === 'array') {
-    vtree.children.map(createElement).forEach(el.appendChild.bind(el));
-  }
-
-  return el;
-};

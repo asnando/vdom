@@ -4,7 +4,9 @@ var _ = require('./utils/index');
 
 module.exports = function vtree(type, props, children) {
 
-  console.warn(type, props, children);
+  if (type === 'text' && _.type(props) === 'string') {
+    return createTextNode(props);
+  }
 
   if (arguments.length < 1) {
     throw new Error('Undefined tag name or text content.');
@@ -22,26 +24,30 @@ module.exports = function vtree(type, props, children) {
     throw new Error('Children must be an array representation.');
   }
 
-  if (_.isDef(children)) {
-    children = children.map(function (child) {
-      return vtree(child);
-    });
-  }
-
   var nodeType = (arguments.length === 1 && typeof type === 'string') ? 'vtext' : 'vnode';
 
   switch (nodeType) {
 
     case 'vtext':
-      return _.xtend(vtext(type), {
-        VTREE: 1
-      });
+      return createTextNode(type);
+      break;
 
     case 'vnode':
-      return _.xtend(vnode(type, props, children), {
-        VTREE: 1
-      });
+      return createNode(type, props, children);
+      break;
 
   };
   
+}
+
+function createTextNode(text) {
+  return _.xtend(vtext(text), {
+    VTREE: 1
+  });
+}
+
+function createNode(type, props, children) {
+  return _.xtend(vnode(type, props, children), {
+    VTREE: 1
+  });
 }

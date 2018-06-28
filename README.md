@@ -1,124 +1,107 @@
 # vdom
 
-🌲 Virtual DOM Tree to render and apply changes between two state changes into the real DOM.
+Virtual DOM Tree to render and patch changes between state changes into the real DOM.
 
 ## Motivation
 
-The need to update only the actual changes between two states of an element within the real DOM. Something like reactive libraries, such as React.js.
+The need to update only the actual changes between two states of an element within the real DOM. Something like reactive libraries.
 
-Some libraries offer the same or similar service, but do not always have a small file size to distribute your code. With this in mind, a small code <b>(8Kb)</b> has been developed capable of performing the necessary work.
+Some libraries offer the same or similar service, but do not always have a small file size to distribute your code. With this in mind, a small code <i>(~8Kb)</i> has been developed capable of performing the necessary work.
 
-## Public API
+<!----------------------------------------------------->
 
-### `create(vtree)`
-Receives an virtual tree and returns the real DOM Element for that tree.
-
-```javascript
-var tree = vdom.vtree(...);
-var el = vdom.create(tree);
-document.body.appendChild(el);
-```
-
-### `vtree(type, props, children)`
-Creates Virtual DOM Tree.
-
-`type`
-
-If "text" is used, then will create an "Virtual Text Node" instead of normal Node.
-
-If only this argument is passed to the function and it type is equals to string, then it will automatically return an Virtual Text Node with this value as text.
-
-`props`
-
-A list of properties that will be seted inside the element attributes.
-
-`children`
-
-Array of elements that will be nested inside the element.
-
-```javascript
-var tree = vdom.vtree('ul', null, [
-  vdom.h('li', { data: 'B' }, [ vdom.h('B') ])
-]);
-
-console.log(tree);
-```
-
-
-### `vnode(type, props, children)`
-Returns the Virtual Node for the given parameters.
-
-`type`
-
-The type of tagname of the element.
-
-`props`
-
-Object of attributes/propreties that will be set as the element attributes.
-
-`children`
-
-Array of sub-elements that will be contained inside the element.
-
-```javascript
-var vnode = vdom.vnode('div', { someData: 1 }, [
-  vdom.vnode('div')
-]);
-```
-
-### `vtext(text)`
-Returns the Virtual Text Node for the given text.
-
-```javascript
-var text = vdom.vtext('Some text here.');
-```
-
-### `render(root, newTree, oldTree)`
-Renders the created html for the given virtual tree(s).
-
-This function must receive an rendered element in the real DOM, where it will be mounted after the trees mount.
-
-When two trees are passed as argument, the function will calculate the differences between the two trees and <b>will only re-render the differences in the Real DOM.</b>
-
-##### ⚠️  The root element for the render function must be an different element from the body element of the page.
-
-```javascript
-var root = document.querySelector('#root');
-
-var treeA = vdom.h('ul', null, [
-  vdom.h('li', { data: 'A' }, [ vdom.h('A') ])
-]);
-
-vdom.render(root, treeA);
-
-var treeB = vdom.h('ul', null, [
-  vdom.h('li', { data: 'B' }, [ vdom.h('B') ])
-]);
-
-vdom.render(root, treeB, treeA);
-```
-
-### `parse2Tree(html)`
-Parses an html element or html string representation to a new Virtual DOM Tree.
-
-```javascript
-var html = document.querySelector('.container') || '<ul>\
-  <li>A</li>\
-  <li>B</li>\
-</ul>';
-
-var tree = vdom.parse2Tree(html);
-```
-
-### `h(type, props, children)`
+## h
 Use hyperscript style to create Virtual DOM Trees.
 
-Interface to "vtree" method.
+### `type {string}`
+Tag name of the element that will be represented. If type equals to <b>text</b> then the text value will be obtained from the <i><u>props</u></i> parameter.
+
+### `props {object}`
+Object of properties that will be applied as attributes of the html element at the render time.
+
+### `children {array}`
+Array of children nodes of the element (will be the same object type).
 
 ```javascript
-var tree = vdom.h('ul', null, [
-  vdom.h('li', { data: 'B' }, [ vdom.h('B') ])
+var h = vdom.h;
+
+var tree = h('ul', null, [
+  h('li', {
+    data: 'abc'
+  }, [ h('Some random text.') ])
+]);
+```
+
+<!----------------------------------------------------->
+
+## toHTML
+
+Receives a virtual tree and returns the DOM element representing it.
+
+### `vtree {VTree}`
+
+```javascript
+var tree = vdom.h(/*...*/);
+var el = vdom.toHTML(tree);
+target.appendChild(el);
+```
+
+<!----------------------------------------------------->
+
+## toTree
+
+Returns a virtual tree which represents the value passed, which may be a html element or html template string.
+
+### `e {HTMLElement, String}`
+When html element it will return an virtual node, otherwise when string it will return a virtual text node.
+
+```javascript
+var tree = vdom.toTree(document.querySelector('.my-selector'));
+```
+
+<!----------------------------------------------------->
+
+## render
+
+### `root {HTMLElement}`
+The element where the tree will be mounted.
+
+ <center>
+ <b>
+ ⚠️️️️️️️️<br/> Avoid mounting inside the document.body element as it may make your DOM inconsistent in some cases.
+ </b>
+ </center>
+
+
+### `nTree {VTree}`
+The virtual tree that will be generated and mounted inside the <i>root</i> element.
+
+### `oTree {VTree}`
+The old virtual tree that will be compared with the new one (used on state changes).
+
+You should always cache the last virtual tree used to compare them later.
+
+### `delegator {object}`
+Object containing the <b>add</b> and <b>remove</b> methods which may be capable to receive a html element and attach/detach the desired event listeners.
+
+
+```javascript
+var h = vdom.h;
+var render = vdom.render;
+
+var root = document.querySelector('#root');
+
+var treeA = h('ul', null, [
+  vdoh('li', { data: 'A' }, [ h('A') ])
 ]);
 
-console.log(tree);
+var treeB = h('ul', null, [
+  h('li', { data: 'B' }, [ h('B') ])
+]);
+
+/* with initial state object */
+render(root, treeA);
+
+/* with two state objects (will find the differences) */
+render(root, treeB, treeA);
 ```
