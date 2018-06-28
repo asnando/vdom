@@ -66,11 +66,9 @@ var tree = vdom.toTree(document.querySelector('.my-selector'));
 ### `root {HTMLElement}`
 The element where the tree will be mounted.
 
- <center>
  <b>
- ⚠️️️️️️️️<br/> Avoid mounting inside the document.body element as it may make your DOM inconsistent in some cases.
+ ⚠️️️️️️️️ Avoid mounting inside the document.body element as it may make your DOM inconsistent in some cases.
  </b>
- </center>
 
 
 ### `nTree {VTree}`
